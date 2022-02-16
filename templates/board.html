@@ -1,0 +1,85 @@
+{{define "board"}}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Rave Bingo</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script>
+    $(document).ready(function() {
+        console.log("bingo begins");
+        $("#sendit").click(function() {
+            var boardData = JSON.stringify( $("#board").serializeArray() );
+            console.log(boardData)
+            $.ajax({
+                url : "/board",
+                type: "POST",
+                processData: false,
+                data: boardData,
+                success: function(data, textStatus, jqXHR)
+                {
+                    console.log(data);
+                },
+                error: function (jqXHR, textStatus, errorThrown)
+                {
+                    console.log(errorThrown);
+                }
+            });
+
+        });
+    });
+</script>
+</head>
+<body>
+<div id="buttons">
+    <h1>Set up your bingo board</h1>
+
+    <P>For each square, enter the number, check the first box if it is checked already, and the second set of boxes if the square is required by a shape.</P>
+    <form id="board" method="post">
+        <table>
+            <tr><th>B</th><th>I</th><th>N</th><th>G</th><th>O</th></tr>
+            {{range .Rows}}
+            <tr>
+                {{ range . }}
+                  <td>{{template "square" .}}</td>
+                {{ end }}
+            </tr>
+            {{end}}
+        </table>
+        <P>Numbers already called:</P>
+        {{range $i := N 1 15}}
+        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        {{end}}
+        <br>
+        {{range $i := N 16 30}}
+        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        {{end}}
+        <br>
+        {{range $i := N 31 45}}
+        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        {{end}}
+        <br>
+        {{range $i := N 46 60}}
+        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        {{end}}
+        <br>
+        {{range $i := N 61 75}}
+        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        {{end}}
+        <br>
+        <input type="button" id="sendit" name="sendit" value="sendit"/>
+    </form>
+</div>
+<br>
+
+</body>
+</html>
+{{end}}
+
+{{define "square"}}
+    <input size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}" />
+    <br/>
+    <input type="checkbox" name="square_needed_{{.Number}}_1"/>
+    <input type="checkbox" name="square_needed_{{.Number}}_2"/>
+{{end}}

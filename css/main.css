@@ -1,0 +1,39 @@
+
+/*body {color: #c0392b}*/
+table, th, td {
+    border: 1px solid;
+}
+
+img {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    width: 500px;
+}
+
+.btnStack {
+    background-color: darkgreen;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 1.428571429;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+a.btnStack:hover {
+    background-color: #000;
+}
