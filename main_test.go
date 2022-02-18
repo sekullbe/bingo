@@ -30,19 +30,21 @@ func Test_playUntilWin_twoWinners(t *testing.T) {
 	assert.True(t, len(winners) == 2)
 }
 
+// This test is skipped because there are no callable squares and we only check wins after a call
 func Test_freeSquare(t *testing.T) {
+	//t.Skipf("No longer relevant")
 	// if a shape only requires the free square it should win on one call
 	var game = newGame()
-	game.setNeeded(1, []int{13})
+	game.setNeeded(1, []int{12})
 	calls, _, err := playUntilWin(game)
 	assert.Nil(t, err)
-	assert.True(t, calls == 1)
+	assert.True(t, calls == 0)
 }
 
 func Test_freeSquare_andOneMore(t *testing.T) {
 	// if a shape only requires the free square and one more it should win instantly
 	var game = newGame()
-	game.setNeeded(1, []int{13, 14})
+	game.setNeeded(1, []int{12, 14})
 	won := game.playSquare(14)
 	assert.True(t, won)
 }

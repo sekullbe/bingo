@@ -11,7 +11,6 @@
         console.log("bingo begins");
         $("#sendit").click(function() {
             var boardData = JSON.stringify( $("#board").serializeArray() );
-            console.log(boardData)
             $.ajax({
                 url : "/board",
                 type: "POST",
@@ -19,7 +18,11 @@
                 data: boardData,
                 success: function(data, textStatus, jqXHR)
                 {
+                    // parse out the data and stick it into the DOM
                     console.log(data);
+                    $("#avgCalls").text(data.AverageCallsUntilWin)
+                    $("#shape1").text(data.WinsForEachShape[1] || 0)
+                    $("#shape2").text(data.WinsForEachShape[2] || 0)
                 },
                 error: function (jqXHR, textStatus, errorThrown)
                 {
@@ -35,7 +38,7 @@
 <div id="buttons">
     <h1>Set up your bingo board</h1>
 
-    <P>For each square, enter the number, check the first box if it is checked already, and the second set of boxes if the square is required by a shape.</P>
+    <P>For each square, enter the number, and check the boxes for each shape that requires that box.</P>
     <form id="board" method="post">
         <table>
             <tr><th>B</th><th>I</th><th>N</th><th>G</th><th>O</th></tr>
@@ -72,6 +75,11 @@
     </form>
 </div>
 <br>
+<div id="results">
+<p>Average calls before this board wins: <span id="avgCalls"></span></p>
+    <p>Scenarios where shape 1 wins: <span id="shape1"></span></p>
+    <p>Scenarios where shape 2 wins: <span id="shape2"></span></p>
+</div>
 
 </body>
 </html>

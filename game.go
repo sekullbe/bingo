@@ -6,12 +6,18 @@ import (
 	"time"
 )
 
+// FIXME Why are there 75 squares? Should be 25 squares, and we just keep track of what number
+// each square is and which numbers have been called. If we don't have a square for a number,
+// we don't care anything about it other than not calling it again.
+// FIXME going to have a problem with the zero indexing
+
 type Game struct {
-	Squares   [76]Square   `json:"squares"`   //
-	Called    map[int]bool `json:"called"`    // All the numbers that have been called
-	PreCalled map[int]bool `json:"preCalled"` // All the numbers that have been called
-	Shapes    map[int]bool `json:"shapes"`    // Which shapes exist in the game
-	rand      *rand.Rand   `copier:"-"`
+	Squares         [25]Square   `json:"squares"`   //
+	Called          map[int]bool `json:"called"`    // All the numbers that have been called
+	PreCalled       map[int]bool `json:"preCalled"` // All the numbers that have been called
+	Shapes          map[int]bool `json:"shapes"`    // Which shapes exist in the game
+	BingoNumToIndex map[int]int
+	rand            *rand.Rand `copier:"-"`
 }
 
 type Square struct {
@@ -25,17 +31,22 @@ func newGame() *Game {
 	g := Game{}
 	g.Called = make(map[int]bool)
 	g.PreCalled = make(map[int]bool)
-	g.Called[13] = true
-	g.PreCalled[13] = true
+	g.BingoNumToIndex = make(map[int]int)
+	g.Called[12] = true
+	g.PreCalled[12] = true
 	g.Shapes = make(map[int]bool)
-	for i := 1; i <= 75; i++ {
+	for i := 0; i < 25; i++ {
+		g.BingoNumToIndex[i] = i
 		s := newSquare(i)
-		if i == 13 { // free square
+		if i == 12 { // free square
 			s.PreCalled = true
 			s.Called = true
 		}
 		g.Squares[i] = s
 	}
+	// remove any mapping to the free square
+	delete(g.BingoNumToIndex, 12)
+
 	s1 := rand.NewSource(time.Now().UnixNano())
 	g.rand = rand.New(s1)
 
@@ -50,7 +61,13 @@ func (g *Game) setNeeded(shapeId int, squares []int) {
 }
 
 // Checks if playing this square has created a win
-func (g *Game) playSquare(squareId int) bool {
+func (g *Game) playSquare(bingoNum int) bool {
+	// See if we have the square for the number that was called
+	squareId, exists := g.BingoNumToIndex[bingoNum]
+	if !exists { // we don't have that square
+		return false
+	}
+
 	g.Squares[squareId].Called = true
 	for shapeId, _ := range g.Shapes {
 		// doing it this way is slightly more efficient but only tells you if that move created a win,

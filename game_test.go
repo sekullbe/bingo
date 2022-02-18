@@ -26,7 +26,7 @@ func TestGame_pickUncalledSquare(t *testing.T) {
 	assert.True(t, n >= 1)
 	assert.True(t, n <= 75)
 	assert.Nil(t, err)
-	for i := 1; i <= 74; i++ { // pick 74 more numbers
+	for i := 1; i <= 73; i++ { // pick 73 more numbers, because 1 is the free square
 		m, err := game.callRandomSquare()
 		assert.False(t, n == m)
 		assert.True(t, m >= 1)

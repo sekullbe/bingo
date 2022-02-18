@@ -21,6 +21,11 @@ var templateFS embed.FS
 //go:embed css
 var cssFS embed.FS
 
+type Results struct {
+	AverageCallsUntilWin int
+	WinsForEachShape     map[int]int
+}
+
 func main() {
 
 	port := flag.String("port", "8888", "default http port")
@@ -36,37 +41,74 @@ func main() {
 
 }
 func parseBoard(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "{\"hello\"}")
-
+	w.Header().Set("Content-Type", "application/json")
 	b, err := io.ReadAll(req.Body)
-	// b, err := ioutil.ReadAll(resp.Body)  Go.1.15 and earlier
 	if err != nil {
-		log.Fatalln(err)
+		if err != nil {
+			_, err := fmt.Fprintf(w, "{\"error\":\"%s\"}", err)
+			if err != nil {
+				log.Printf("error handling error: %s", err)
+			}
+			return
+		}
 	}
 	//log.Println(string(b))
+
+	// FIXME on error, send back a 4xx
 
 	var data []map[string]string
 	err = json.Unmarshal(b, &data)
 	if err != nil {
-		log.Fatal(err)
+		_, err = fmt.Fprintf(w, "{\"error\":\"%s\"}", err)
+		if err != nil {
+			log.Printf("error handling error: %s", err)
+		}
+		return
 	}
 	g, err := createGameFromDataMap(data)
-	wins, shapes := computeAveragePlaysUntilWin(g, 10)
+	if err != nil {
+		_, err = fmt.Fprintf(w, "{\"error\":\"%s\"}", err)
+		if err != nil {
+			log.Printf("error handling error: %s", err)
+		}
+		return
+	}
+	wins, shapes := computeAveragePlaysUntilWin(g, 100)
 
-	_ = wins
-	_ = shapes
+	results := Results{AverageCallsUntilWin: wins, WinsForEachShape: shapes}
+	log.Println(results)
 
 	// send some JSON back with the details
+	jsonBytes, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		_, err = fmt.Fprintf(w, "{\"error\":\"%s\"}", err)
+		if err != nil {
+			log.Printf("error handling error: %s", err)
+		}
+		return
+	}
+	_, err = fmt.Fprintf(w, string(jsonBytes))
+	if err != nil {
+		log.Printf("error handling error: %s", err)
+	}
 
 }
 
+// FIXME clearly I have a bug around the free square
+// if I specify a square as "12" a shape that needs it never wins
+// i think what i need to do is just ignore 12 on input- don't mark it required or called
+// don't mark it anything special
+// In the HTML on start, set that square to 0 and disable the input
+
 func createGameFromDataMap(userBoard []map[string]string) (*Game, error) {
 	g := newGame()
-	//this is an array of maps
+	g.BingoNumToIndex = make(map[int]int)
+	// this is an array of maps (pairs of name=x, value=y)
 	// each map has name=square_id_{squareid} or name= square_needed_{squareId}_{shapeId}
 	// and value = Square.Number or "on" if that square is needed for the shapeId
 	// "square_needed_1_#" value = "on"
 	// "square_id_#"   value = "#"
+
 	for _, m := range userBoard {
 		n := m["name"]
 		v := m["value"]
@@ -80,11 +122,15 @@ func createGameFromDataMap(userBoard []map[string]string) (*Game, error) {
 			if err != nil {
 				return nil, errors.New("cannot parse board: squarenum")
 			}
-			// can't modify it directly, I don't remember why
-			// or is that just structs?
+
+			// Create a map from bingo num to square index
+			g.BingoNumToIndex[squareNum] = squareIdx
+
+			// can't modify it in place, I don't remember why, or is that just structs?
 			sq := g.Squares[squareIdx]
 			sq.Number = squareNum
 			g.Squares[squareIdx] = sq
+
 		} else if strings.HasPrefix(n, "square_needed") {
 			var squareIdx int
 			var shapeIdx int
@@ -120,7 +166,8 @@ func createGameFromDataMap(userBoard []map[string]string) (*Game, error) {
 		}
 
 	}
-
+	// remove any mapping to the free square
+	delete(g.BingoNumToIndex, 12)
 	return g, nil
 }
 
@@ -135,9 +182,11 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	for row := 0; row < 5; row++ {
 		rows[row] = make([]Square, 5)
 		for col := 0; col < 5; col++ {
-			rows[row][col] = newSquare((row)*5 + col + 1)
+			rows[row][col] = newSquare((row)*5 + col)
 		}
 	}
+	rows[0][0].Number = 0
+	rows[2][2].Number = 0
 
 	err = tmpl.ExecuteTemplate(w, "board", struct {
 		Rows [][]Square
@@ -164,6 +213,9 @@ func N(start, end int) (stream chan int) {
 func computeAveragePlaysUntilWin(g *Game, games int) (avgCalls int, winningShapes map[int]int) {
 	var totalcalls int
 	winningShapes = make(map[int]int)
+	for i, _ := range g.Shapes {
+		winningShapes[i] = 0
+	}
 	for i := 0; i < games; i++ {
 		g.reset()
 		calls, winners, err := playUntilWin(g)
@@ -186,6 +238,15 @@ func playUntilWin(g *Game) (numCalls int, wonShapes []int, err error) {
 	var won bool
 	wonShapes = []int{}
 	callednums := []int{}
+
+	// check the degnerate case where we have already won
+	for s, _ := range g.Shapes {
+		if g.winner(s) {
+			wonShapes = append(wonShapes, s)
+			won = true
+		}
+	}
+
 	for !won {
 		sq, err := g.callRandomSquare()
 		if err != nil {
@@ -194,13 +255,14 @@ func playUntilWin(g *Game) (numCalls int, wonShapes []int, err error) {
 		callednums = append(callednums, sq)
 		numCalls++
 		won = g.playSquare(sq)
-	}
-	// which shape won?
-	for s, _ := range g.Shapes {
-		if g.winner(s) {
-			wonShapes = append(wonShapes, s)
+		// which shape won?
+		for s, _ := range g.Shapes {
+			if g.winner(s) {
+				wonShapes = append(wonShapes, s)
+			}
 		}
 	}
-	log.Printf("shapes %v won after %d calls: %v\n", wonShapes, numCalls, callednums)
+
+	//log.Printf("shapes %v won after %d calls: %v\n", wonShapes, numCalls, callednums)
 	return
 }
