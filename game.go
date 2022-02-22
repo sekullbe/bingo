@@ -11,68 +11,82 @@ import (
 // we don't care anything about it other than not calling it again.
 // FIXME going to have a problem with the zero indexing
 
+/*
+so a Game contains a map of bingo numbers to Squares
+
+when we create a Game, pass in Squares
+each Square knows its number, and for which Shapes it is needed
+the Game knows the list of Squares, and which numbers are called.
+does it need to know the shapes? i think so, just so we know which shapes to query
+
+*/
+
+// These methods ignore the free square- when you're creating the board just mark it called on
+// creation, or mark it as not required.
+
 type Game struct {
-	Squares         [25]Square   `json:"squares"`   //
-	Called          map[int]bool `json:"called"`    // All the numbers that have been called
-	PreCalled       map[int]bool `json:"preCalled"` // All the numbers that have been called
-	Shapes          map[int]bool `json:"shapes"`    // Which shapes exist in the game
-	BingoNumToIndex map[int]int
-	rand            *rand.Rand `copier:"-"`
+	Squares   map[int]Square `json:"squares"`   // The squares on the player's board
+	Called    map[int]bool   `json:"called"`    // All the numbers that have been called during play
+	PreCalled map[int]bool   `json:"preCalled"` // All the numbers that have been called before play
+	NumShapes int            `json:"numShapes"`
+	rand      *rand.Rand     `copier:"-"`
 }
 
 type Square struct {
-	Number    int          `json:"number"`
-	Called    bool         `json:"called"`
-	PreCalled bool         `json:"preCalled"`
-	Needed    map[int]bool `json:"needed"` // to handle multiple shapes
+	Number    int          `json:"number"`    // not really necessary, number is the key from Game->Square
+	Called    bool         `json:"called"`    // FIXME necessary?
+	PreCalled bool         `json:"preCalled"` // FIXME necessary?
+	Needed    map[int]bool `json:"needed"`    // to handle multiple shapes
 }
 
+const FreeSquareIndex = 12
+
+// why does this care about being an actual bingo board?
+// there are 75 possible numbers to call
+// the player has 24 of them plus the free square
+// for free square, just ignore any shapes for it
+// so... just set up a map for each shape? or a map of the numbers?
+
+// Returns a Game with no squares, no calls, and an initialized RNG
 func newGame() *Game {
 	g := Game{}
+	g.Squares = make(map[int]Square)
 	g.Called = make(map[int]bool)
 	g.PreCalled = make(map[int]bool)
-	g.BingoNumToIndex = make(map[int]int)
-	g.Called[12] = true
-	g.PreCalled[12] = true
-	g.Shapes = make(map[int]bool)
-	for i := 0; i < 25; i++ {
-		g.BingoNumToIndex[i] = i
-		s := newSquare(i)
-		if i == 12 { // free square
-			s.PreCalled = true
-			s.Called = true
-		}
-		g.Squares[i] = s
-	}
-	// remove any mapping to the free square
-	delete(g.BingoNumToIndex, 12)
-
+	g.NumShapes = 0
 	s1 := rand.NewSource(time.Now().UnixNano())
 	g.rand = rand.New(s1)
-
 	return &g
 }
 
-func (g *Game) setNeeded(shapeId int, squares []int) {
-	g.Shapes[shapeId] = true
-	for _, square := range squares {
-		g.Squares[square].Needed[shapeId] = true
+// Add a square to the player's bingo board with its number and which shapes it's needed for
+func (g *Game) addSquare(bingoNum int, preCalled bool, needed ...int) {
+	sq := newSquare(bingoNum)
+	sq.PreCalled = preCalled
+	for _, n := range needed {
+		sq.Needed[n] = true
 	}
+	g.Squares[bingoNum] = sq
+	if len(sq.Needed) > g.NumShapes {
+		g.NumShapes = len(sq.Needed)
+	}
+
 }
 
-// Checks if playing this square has created a win
+// Mark the square played, and check if the board has won.
 func (g *Game) playSquare(bingoNum int) bool {
+
+	square, exists := g.Squares[bingoNum]
+
 	// See if we have the square for the number that was called
-	squareId, exists := g.BingoNumToIndex[bingoNum]
 	if !exists { // we don't have that square
 		return false
 	}
 
-	g.Squares[squareId].Called = true
-	for shapeId, _ := range g.Shapes {
-		// doing it this way is slightly more efficient but only tells you if that move created a win,
-		// not if the board was already in win state
-		//for shapeId, _ := range g.Squares[squareId].Needed {
+	square.Called = true
+	g.Squares[bingoNum] = square
+
+	for shapeId, _ := range square.Needed {
 		if g.winner(shapeId) {
 			return true
 		}
@@ -92,7 +106,7 @@ func (g *Game) winner(shape int) bool {
 func (g *Game) callRandomSquare() (int, error) {
 	n := 0
 	if len(g.Called) >= 75 {
-		return 0, errors.New("No more numbers to pick")
+		return 0, errors.New("no more numbers to pick")
 	}
 	for ; n == 0 || (n > 0 && g.Called[n] == true); n = g.rand.Intn(75) + 1 {
 	}
@@ -106,12 +120,12 @@ func (g *Game) reset() {
 	for key, value := range g.PreCalled {
 		g.Called[key] = value
 	}
-	for i, square := range g.Squares {
+	for _, square := range g.Squares {
 		square.Called = square.PreCalled
-		g.Squares[i] = square
+		g.Squares[square.Number] = square
 	}
 }
 
 func newSquare(n int) Square {
-	return Square{Number: n, Called: false, Needed: make(map[int]bool)}
+	return Square{Number: n, Called: false, PreCalled: false, Needed: make(map[int]bool)}
 }

@@ -99,16 +99,17 @@ func parseBoard(w http.ResponseWriter, req *http.Request) {
 // i think what i need to do is just ignore 12 on input- don't mark it required or called
 // don't mark it anything special
 // In the HTML on start, set that square to 0 and disable the input
+// Or ignore 12 here
 
 func createGameFromDataMap(userBoard []map[string]string) (*Game, error) {
 	g := newGame()
-	g.BingoNumToIndex = make(map[int]int)
 	// this is an array of maps (pairs of name=x, value=y)
 	// each map has name=square_id_{squareid} or name= square_needed_{squareId}_{shapeId}
 	// and value = Square.Number or "on" if that square is needed for the shapeId
 	// "square_needed_1_#" value = "on"
 	// "square_id_#"   value = "#"
 
+	idxToBingoNum := make(map[int]int)
 	for _, m := range userBoard {
 		n := m["name"]
 		v := m["value"]
@@ -123,13 +124,11 @@ func createGameFromDataMap(userBoard []map[string]string) (*Game, error) {
 				return nil, errors.New("cannot parse board: squarenum")
 			}
 
-			// Create a map from bingo num to square index
-			g.BingoNumToIndex[squareNum] = squareIdx
-
-			// can't modify it in place, I don't remember why, or is that just structs?
-			sq := g.Squares[squareIdx]
-			sq.Number = squareNum
-			g.Squares[squareIdx] = sq
+			idxToBingoNum[squareIdx] = squareNum
+			if squareIdx == FreeSquareIndex || squareIdx < 1 || squareIdx > 75 {
+				continue
+			}
+			g.addSquare(squareNum, false)
 
 		} else if strings.HasPrefix(n, "square_needed") {
 			var squareIdx int
@@ -138,11 +137,22 @@ func createGameFromDataMap(userBoard []map[string]string) (*Game, error) {
 			if err != nil {
 				return nil, errors.New("cannot parse board: square_needed")
 			}
+
+			squareNum := idxToBingoNum[squareIdx]
+
+			if squareIdx == FreeSquareIndex || squareIdx < 1 || squareIdx > 75 {
+				continue
+			}
+
 			// don't actually care about the value because if it was false it wouldn't be here
-			sq := g.Squares[squareIdx]
+			sq := g.Squares[squareNum]
 			sq.Needed[shapeIdx] = true
-			g.Squares[squareIdx] = sq
-			g.Shapes[shapeIdx] = true // record that we need this shape
+			// maybe this should be a method Square.addNeeded
+			if len(sq.Needed) > g.NumShapes {
+				g.NumShapes = len(sq.Needed)
+			}
+			g.Squares[squareNum] = sq
+
 		} else if strings.HasPrefix(n, "called") {
 			// the numbers we are getting in are *called* numbers, not board indices
 			// so we need to find the square with that number and check it
@@ -153,21 +163,15 @@ func createGameFromDataMap(userBoard []map[string]string) (*Game, error) {
 			}
 			g.Called[calledNum] = true
 			g.PreCalled[calledNum] = true
-			for i, square := range g.Squares {
-				if square.Number == calledNum {
-					square.Called = true
-					square.PreCalled = true
-					g.Squares[i] = square
-					break
-				}
-			}
+			sq := g.Squares[calledNum]
+			sq.PreCalled = true
+			sq.Called = true
+			g.Squares[calledNum] = sq
 		} else {
 			log.Printf("don't know what to do with %s", n)
 		}
 
 	}
-	// remove any mapping to the free square
-	delete(g.BingoNumToIndex, 12)
 	return g, nil
 }
 
@@ -185,7 +189,7 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 			rows[row][col] = newSquare((row)*5 + col)
 		}
 	}
-	rows[0][0].Number = 0
+	rows[0][0].Number = 1
 	rows[2][2].Number = 0
 
 	err = tmpl.ExecuteTemplate(w, "board", struct {
@@ -198,6 +202,7 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// N Range function made available to the template
 func N(start, end int) (stream chan int) {
 	stream = make(chan int)
 	go func() {
@@ -213,7 +218,7 @@ func N(start, end int) (stream chan int) {
 func computeAveragePlaysUntilWin(g *Game, games int) (avgCalls int, winningShapes map[int]int) {
 	var totalcalls int
 	winningShapes = make(map[int]int)
-	for i, _ := range g.Shapes {
+	for i := 0; i < g.NumShapes; i++ {
 		winningShapes[i] = 0
 	}
 	for i := 0; i < games; i++ {
@@ -239,8 +244,8 @@ func playUntilWin(g *Game) (numCalls int, wonShapes []int, err error) {
 	wonShapes = []int{}
 	callednums := []int{}
 
-	// check the degnerate case where we have already won
-	for s, _ := range g.Shapes {
+	// check the degenerate case where we have already won
+	for s := 0; s < g.NumShapes; s++ {
 		if g.winner(s) {
 			wonShapes = append(wonShapes, s)
 			won = true
@@ -256,7 +261,7 @@ func playUntilWin(g *Game) (numCalls int, wonShapes []int, err error) {
 		numCalls++
 		won = g.playSquare(sq)
 		// which shape won?
-		for s, _ := range g.Shapes {
+		for s := 0; s < g.NumShapes; s++ {
 			if g.winner(s) {
 				wonShapes = append(wonShapes, s)
 			}

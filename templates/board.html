@@ -21,8 +21,8 @@
                     // parse out the data and stick it into the DOM
                     console.log(data);
                     $("#avgCalls").text(data.AverageCallsUntilWin)
-                    $("#shape1").text(data.WinsForEachShape[1] || 0)
-                    $("#shape2").text(data.WinsForEachShape[2] || 0)
+                    $("#shape1").text(data.WinsForEachShape[0] || 0)
+                    $("#shape2").text(data.WinsForEachShape[1] || 0)
                 },
                 error: function (jqXHR, textStatus, errorThrown)
                 {
@@ -38,7 +38,7 @@
 <div id="buttons">
     <h1>Set up your bingo board</h1>
 
-    <P>For each square, enter the number, and check the boxes for each shape that requires that box.</P>
+    <P>For each square, enter the number, and check the boxes for each shape that requires that box. Shape 1 (arrow) is the left box; shape 2 (heart) is the right box.</P>
     <form id="board" method="post">
         <table>
             <tr><th>B</th><th>I</th><th>N</th><th>G</th><th>O</th></tr>
@@ -88,6 +88,6 @@
 {{define "square"}}
     <input size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}" />
     <br/>
+    <input type="checkbox" name="square_needed_{{.Number}}_0"/>
     <input type="checkbox" name="square_needed_{{.Number}}_1"/>
-    <input type="checkbox" name="square_needed_{{.Number}}_2"/>
 {{end}}
