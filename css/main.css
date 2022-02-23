@@ -19,6 +19,13 @@ td {
     padding: 10px;
 }
 
+td.notDrawn {
+
+}
+td.drawn {
+    background-color: lightgreen;
+}
+
 .btnStack {
     background-color: darkgreen;
     color: white;

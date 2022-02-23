@@ -1,5 +1,6 @@
 {{define "board"}}
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <title>Rave Bingo</title>
@@ -33,8 +34,21 @@
 
                 }
             });
-
         });
+
+        $(".bingoNum").change(function(ev) {
+            // if the number is checked, set the class of the enclosing tr to 'drawn', else 'notDrawn'
+            let bn = this.value;
+            let p = $(ev.target).parent();
+            if ($('#called_'+bn).attr('checked')) {
+                console.log("yay " + bn);
+                p.addClass('drawn');
+            } else {
+                console.log("boo "+ bn);
+                p.removeClass('drawn');
+            }
+        });
+
     });
 </script>
 </head>
@@ -49,7 +63,7 @@
             {{range .Rows}}
             <tr>
                 {{ range . }}
-                  <td>{{template "square" .}}</td>
+                  <td class="{{if eq .Number 0}}drawn{{end}}">{{template "square" .}}</td>
                 {{ end }}
             </tr>
             {{end}}
@@ -57,23 +71,23 @@
         <P>Numbers already called:</P>
         {{ $c := .Called}}
         {{range $i := N 1 15}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 16 30}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 31 45}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 46 60}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 61 75}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         <input type="button" id="sendit" name="sendit" value="sendit"/>
@@ -88,13 +102,13 @@
 </div>
 
 </body>
-</html>
+</htmllang>
 {{end}}
 
 {{define "square"}}
-{{if eq .Number 0}}FREE{{else}}<input size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}"/>{{end}}
-    <br/>
+{{if eq .Number 0}}FREE{{else}}<input class="bingoNum" size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}"/>{{end}}
     <span class="needed">
+      <br/>
       <input type="checkbox" {{if (index .Needed 0)}}checked{{end}} name="square_needed_{{.Number}}_0"/>
       <input type="checkbox" {{if (index .Needed 1)}}checked{{end}} name="square_needed_{{.Number}}_1"/>
     </span>
