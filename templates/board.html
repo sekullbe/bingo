@@ -41,13 +41,27 @@
             let bn = this.value;
             let p = $(ev.target).parent();
             if ($('#called_'+bn).attr('checked')) {
-                console.log("yay " + bn);
                 p.addClass('drawn');
             } else {
-                console.log("boo "+ bn);
                 p.removeClass('drawn');
             }
         });
+
+        $(".calledBox").change(function(ev) {
+            let tid = ev.target.id; // called_N
+            let bn = tid.split("_")[1] //
+            console.log(bn)
+            let box = $('input[value='+bn+']').parent();
+            if (this.checked) {
+                box.addClass('drawn');
+            } else {
+                box.removeClass('drawn');
+            }
+
+
+
+        });
+
 
     });
 </script>
@@ -71,23 +85,23 @@
         <P>Numbers already called:</P>
         {{ $c := .Called}}
         {{range $i := N 1 15}}
-          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 16 30}}
-          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 31 45}}
-          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 46 60}}
-          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 61 75}}
-          <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span>{{$i}}<input type="checkbox"class="calledBox"  {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         <input type="button" id="sendit" name="sendit" value="sendit"/>
