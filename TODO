@@ -1,1 +1,4 @@
 * Mark the squares that are in a shape
+
+BUG: unchecking the checkboxes does not work, probably because checkboxes suck
+

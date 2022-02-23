@@ -103,8 +103,8 @@
         {{range $i := N 61 75}}
           <span>{{$i}}<input type="checkbox"class="calledBox"  {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
-        <br>
-        <input type="button" id="sendit" name="sendit" value="sendit"/>
+        <br/><br/>
+        <input type="button" id="sendit" name="sendit" value="Run Simulation"/>
     </form>
 </div>
 <br>
