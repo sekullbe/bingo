@@ -76,7 +76,7 @@ func parseBoard(w http.ResponseWriter, req *http.Request) {
 	wins, shapes := computeAveragePlaysUntilWin(g, 100)
 
 	results := Results{AverageCallsUntilWin: wins, WinsForEachShape: shapes}
-	log.Println(results)
+	//log.Println(results)
 
 	// send some JSON back with the details
 	jsonBytes, err := json.MarshalIndent(results, "", "  ")
@@ -180,6 +180,8 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 
 	shape0 := makeShapeMap([]int{2, 3, 4, 8, 9, 12, 14, 16, 20})
 	shape1 := makeShapeMap([]int{1, 3, 5, 7, 9, 10, 14, 16, 18, 22})
+	// not really a 'shape' but all I need is a map[int]bool
+	called := makeShapeMap([]int{5, 7, 20, 29, 31, 38, 44, 52, 28, 75, 18, 42, 48, 59, 33, 47, 50, 63, 61, 69, 71, 34, 53, 62, 3, 4, 35, 37, 14, 19, 25, 54, 65})
 
 	var rows [][]Square
 	rows = make([][]Square, 5)
@@ -196,9 +198,11 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	rows[2][2].Number = 0
 
 	err = tmpl.ExecuteTemplate(w, "board", struct {
-		Rows [][]Square
+		Rows   [][]Square
+		Called map[int]bool
 	}{
-		Rows: rows,
+		Rows:   rows,
+		Called: called,
 	})
 	if err != nil {
 		log.Println(err)

@@ -51,24 +51,25 @@
             {{end}}
         </table>
         <P>Numbers already called:</P>
+        {{ $c := .Called}}
         {{range $i := N 1 15}}
-        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 16 30}}
-        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 31 45}}
-        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 46 60}}
-        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 61 75}}
-        <span>{{$i}}<input type="checkbox" name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         <input type="button" id="sendit" name="sendit" value="sendit"/>
