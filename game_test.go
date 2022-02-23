@@ -9,6 +9,7 @@ func TestGame_winner(t *testing.T) {
 
 	var game = newGame()
 	for i := 1; i <= 10; i++ {
+		//shape 0 is all evens, shape 1 all odds
 		game.addSquare(i, false, i%2)
 	}
 

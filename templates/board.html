@@ -88,6 +88,6 @@
 {{define "square"}}
     <input size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}" />
     <br/>
-    <input type="checkbox" name="square_needed_{{.Number}}_0"/>
-    <input type="checkbox" name="square_needed_{{.Number}}_1"/>
+    <input type="checkbox" {{if (index .Needed 0)}}checked{{end}} name="square_needed_{{.Number}}_0"/>
+    <input type="checkbox" {{if (index .Needed 1)}}checked{{end}} name="square_needed_{{.Number}}_1"/>
 {{end}}

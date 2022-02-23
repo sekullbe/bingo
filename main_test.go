@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// creates a game with 10 squares and 2 shapes; one shape is all evens, one all odds
+// creates a game with 10 squares and 2 shapes; shape 0 is all evens, shape 1 all odds
 func createSimpleGame() *Game {
 	var game = newGame()
 	for i := 1; i <= 10; i++ {
@@ -18,6 +18,7 @@ func createSimpleGame() *Game {
 func Test_playUntilWin(t *testing.T) {
 
 	game := createSimpleGame()
+	assert.Equal(t, 2, game.NumShapes())
 	calls, winners, err := playUntilWin(game)
 	assert.Nil(t, err)
 	assert.True(t, calls >= 5)

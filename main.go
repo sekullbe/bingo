@@ -147,10 +147,7 @@ func createGameFromDataMap(userBoard []map[string]string) (*Game, error) {
 			// don't actually care about the value because if it was false it wouldn't be here
 			sq := g.Squares[squareNum]
 			sq.Needed[shapeIdx] = true
-			// maybe this should be a method Square.addNeeded
-			if len(sq.Needed) > g.NumShapes {
-				g.NumShapes = len(sq.Needed)
-			}
+			g.KnownShapes[shapeIdx] = true
 			g.Squares[squareNum] = sq
 
 		} else if strings.HasPrefix(n, "called") {
@@ -181,12 +178,18 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
+	shape0 := makeShapeMap([]int{2, 3, 4, 8, 9, 12, 14, 16, 20})
+	shape1 := makeShapeMap([]int{1, 3, 5, 7, 9, 10, 14, 16, 18, 22})
+
 	var rows [][]Square
 	rows = make([][]Square, 5)
 	for row := 0; row < 5; row++ {
 		rows[row] = make([]Square, 5)
 		for col := 0; col < 5; col++ {
-			rows[row][col] = newSquare((row)*5 + col)
+			sq := newSquare((row)*5 + col)
+			sq.Needed[0] = shape0[sq.Number]
+			sq.Needed[1] = shape1[sq.Number]
+			rows[row][col] = sq
 		}
 	}
 	rows[0][0].Number = 1
@@ -218,7 +221,7 @@ func N(start, end int) (stream chan int) {
 func computeAveragePlaysUntilWin(g *Game, games int) (avgCalls int, winningShapes map[int]int) {
 	var totalcalls int
 	winningShapes = make(map[int]int)
-	for i := 0; i < g.NumShapes; i++ {
+	for i := 0; i < g.NumShapes(); i++ {
 		winningShapes[i] = 0
 	}
 	for i := 0; i < games; i++ {
@@ -245,7 +248,7 @@ func playUntilWin(g *Game) (numCalls int, wonShapes []int, err error) {
 	callednums := []int{}
 
 	// check the degenerate case where we have already won
-	for s := 0; s < g.NumShapes; s++ {
+	for s := 0; s < g.NumShapes(); s++ {
 		if g.winner(s) {
 			wonShapes = append(wonShapes, s)
 			won = true
@@ -261,7 +264,7 @@ func playUntilWin(g *Game) (numCalls int, wonShapes []int, err error) {
 		numCalls++
 		won = g.playSquare(sq)
 		// which shape won?
-		for s := 0; s < g.NumShapes; s++ {
+		for s := 0; s < g.NumShapes(); s++ {
 			if g.winner(s) {
 				wonShapes = append(wonShapes, s)
 			}
@@ -270,4 +273,12 @@ func playUntilWin(g *Game) (numCalls int, wonShapes []int, err error) {
 
 	//log.Printf("shapes %v won after %d calls: %v\n", wonShapes, numCalls, callednums)
 	return
+}
+
+func makeShapeMap(marked []int) map[int]bool {
+	shape := make(map[int]bool)
+	for _, i2 := range marked {
+		shape[i2] = true
+	}
+	return shape
 }

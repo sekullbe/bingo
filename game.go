@@ -25,11 +25,11 @@ does it need to know the shapes? i think so, just so we know which shapes to que
 // creation, or mark it as not required.
 
 type Game struct {
-	Squares   map[int]Square `json:"squares"`   // The squares on the player's board
-	Called    map[int]bool   `json:"called"`    // All the numbers that have been called during play
-	PreCalled map[int]bool   `json:"preCalled"` // All the numbers that have been called before play
-	NumShapes int            `json:"numShapes"`
-	rand      *rand.Rand     `copier:"-"`
+	Squares     map[int]Square `json:"squares"`   // The squares on the player's board
+	Called      map[int]bool   `json:"called"`    // All the numbers that have been called during play
+	PreCalled   map[int]bool   `json:"preCalled"` // All the numbers that have been called before play
+	rand        *rand.Rand     `copier:"-"`
+	KnownShapes map[int]bool
 }
 
 type Square struct {
@@ -53,10 +53,14 @@ func newGame() *Game {
 	g.Squares = make(map[int]Square)
 	g.Called = make(map[int]bool)
 	g.PreCalled = make(map[int]bool)
-	g.NumShapes = 0
+	g.KnownShapes = make(map[int]bool)
 	s1 := rand.NewSource(time.Now().UnixNano())
 	g.rand = rand.New(s1)
 	return &g
+}
+
+func (g *Game) NumShapes() int {
+	return len(g.KnownShapes)
 }
 
 // Add a square to the player's bingo board with its number and which shapes it's needed for
@@ -65,12 +69,9 @@ func (g *Game) addSquare(bingoNum int, preCalled bool, needed ...int) {
 	sq.PreCalled = preCalled
 	for _, n := range needed {
 		sq.Needed[n] = true
+		g.KnownShapes[n] = true
 	}
 	g.Squares[bingoNum] = sq
-	if len(sq.Needed) > g.NumShapes {
-		g.NumShapes = len(sq.Needed)
-	}
-
 }
 
 // Mark the square played, and check if the board has won.
