@@ -4,12 +4,12 @@ import (
 	"embed"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -27,17 +27,21 @@ type Results struct {
 }
 
 func main() {
+	port := os.Getenv("PORT")
 
-	port := flag.String("port", "8888", "default http port")
-	flag.Parse()
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+	//port := flag.String("port", "8888", "default http port")
+	//flag.Parse()
 
 	// CSS is also static, but separated out so it works regardless of other static files
 	http.Handle("/css/", http.FileServer(http.FS(cssFS)))
 	// everything else is the main template
 	http.HandleFunc("/", serveTemplate)
 	http.HandleFunc("/board", parseBoard)
-	log.Println("Ready at http://localhost:" + *port)
-	log.Println(http.ListenAndServe(":"+*port, nil))
+	log.Println("Ready at http://localhost:" + port)
+	log.Println(http.ListenAndServe(":"+port, nil))
 
 }
 func parseBoard(w http.ResponseWriter, req *http.Request) {
