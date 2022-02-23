@@ -11,6 +11,14 @@ img {
     width: 500px;
 }
 
+span.needed {
+    display: none;
+}
+
+td {
+    padding: 10px;
+}
+
 .btnStack {
     background-color: darkgreen;
     color: white;

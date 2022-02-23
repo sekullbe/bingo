@@ -1,5 +1,4 @@
 {{define "board"}}
-<!doctype html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -10,6 +9,7 @@
     $(document).ready(function() {
         console.log("bingo begins");
         $("#sendit").click(function() {
+            $("#errors").hide();
             var boardData = JSON.stringify( $("#board").serializeArray() );
             $.ajax({
                 url : "/board",
@@ -20,13 +20,17 @@
                 {
                     // parse out the data and stick it into the DOM
                     console.log(data);
-                    $("#avgCalls").text(data.AverageCallsUntilWin)
-                    $("#shape1").text(data.WinsForEachShape[0] || 0)
-                    $("#shape2").text(data.WinsForEachShape[1] || 0)
+                    $("#avgCalls").text(data.AverageCallsUntilWin);
+                    $("#shape1").text(data.WinsForEachShape[0] || 0);
+                    $("#shape2").text(data.WinsForEachShape[1] || 0);
+
                 },
                 error: function (jqXHR, textStatus, errorThrown)
                 {
                     console.log(errorThrown);
+                    $("#errors").text("ERROR:" + errorThrown);
+                    $("#errors").show();
+
                 }
             });
 
@@ -38,7 +42,7 @@
 <div id="buttons">
     <h1>Set up your bingo board</h1>
 
-    <P>For each square, enter the number, and check the boxes for each shape that requires that box. Shape 1 (arrow) is the left box; shape 2 (heart) is the right box.</P>
+    <P>For each square, enter the number.
     <form id="board" method="post">
         <table>
             <tr><th>B</th><th>I</th><th>N</th><th>G</th><th>O</th></tr>
@@ -53,29 +57,30 @@
         <P>Numbers already called:</P>
         {{ $c := .Called}}
         {{range $i := N 1 15}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 16 30}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 31 45}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 46 60}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 61 75}}
-        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} name="called" value="called_{{$i}}"/></span>
+        <span>{{$i}}<input type="checkbox" {{if (index $c $i)}}checked{{end}} readonly name="called" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         <input type="button" id="sendit" name="sendit" value="sendit"/>
     </form>
 </div>
 <br>
+<div id="errors" style="display: none;"></div>
 <div id="results">
 <p>Average calls before this board wins: <span id="avgCalls"></span></p>
     <p>Scenarios where shape 1 wins: <span id="shape1"></span></p>
@@ -87,8 +92,10 @@
 {{end}}
 
 {{define "square"}}
-    <input size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}" />
+{{if eq .Number 0}}FREE{{else}}<input size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}"/>{{end}}
     <br/>
-    <input type="checkbox" {{if (index .Needed 0)}}checked{{end}} name="square_needed_{{.Number}}_0"/>
-    <input type="checkbox" {{if (index .Needed 1)}}checked{{end}} name="square_needed_{{.Number}}_1"/>
+    <span class="needed">
+      <input type="checkbox" {{if (index .Needed 0)}}checked{{end}} name="square_needed_{{.Number}}_0"/>
+      <input type="checkbox" {{if (index .Needed 1)}}checked{{end}} name="square_needed_{{.Number}}_1"/>
+    </span>
 {{end}}

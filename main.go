@@ -30,7 +30,7 @@ func main() {
 	port := os.Getenv("PORT")
 
 	if port == "" {
-		log.Fatal("$PORT must be set")
+		port = "8888"
 	}
 	//port := flag.String("port", "8888", "default http port")
 	//flag.Parse()
@@ -48,13 +48,12 @@ func parseBoard(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	b, err := io.ReadAll(req.Body)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, err := fmt.Fprintf(w, "{\"error\":\"%s\"}", err)
 		if err != nil {
-			_, err := fmt.Fprintf(w, "{\"error\":\"%s\"}", err)
-			if err != nil {
-				log.Printf("error handling error: %s", err)
-			}
-			return
+			log.Printf("error handling error: %s", err)
 		}
+		return
 	}
 	//log.Println(string(b))
 
@@ -192,14 +191,13 @@ func serveTemplate(w http.ResponseWriter, r *http.Request) {
 	for row := 0; row < 5; row++ {
 		rows[row] = make([]Square, 5)
 		for col := 0; col < 5; col++ {
-			sq := newSquare((row)*5 + col)
+			sq := newSquare(row + 1 + col*15)
 			sq.Needed[0] = shape0[sq.Number]
 			sq.Needed[1] = shape1[sq.Number]
 			rows[row][col] = sq
 		}
 	}
-	rows[0][0].Number = 1
-	rows[2][2].Number = 0
+	rows[2][2].Number = 0 // free square
 
 	err = tmpl.ExecuteTemplate(w, "board", struct {
 		Rows   [][]Square
