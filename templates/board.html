@@ -40,32 +40,27 @@
             // if the number is checked, set the class of the enclosing tr to 'drawn', else 'notDrawn'
             let bn = this.value;
             let p = $(ev.target).parent();
-            if ($('#called_'+bn).attr('checked')) {
+            if ($('#called_'+bn).is(':checked')) {
                 p.addClass('drawn');
             } else {
                 p.removeClass('drawn');
             }
         });
 
-        $(".calledBox").change(function(ev) {
-            let tid = ev.target.id; // called_N
-            let bn = tid.split("_")[1] //
-            let box = $('input[value='+bn+']').parent();
-            if (this.checked) {
-                box.addClass('drawn');
-            } else {
-                box.removeClass('drawn');
-            }
+        $(".calledBox").change(function() {
+            // let the boxes figure out if they're checked
+            $('.bingoNum').trigger("change");
         });
 
+        // initialize which boxes are checked- can use the value selector here because we're looking at default values
+        // not changed values- if they change the selector no longer works.
         $(".calledBox").each(function(i,e) {
             let elid = e.id; // called_N
             let bn = elid.split("_")[1] //
-            let box = $('input[value='+bn+']').parent();
             if (this.checked) {
-                box.addClass('drawn');
+                $('input[value='+bn+']').parent().addClass('drawn');
             } else {
-                box.removeClass('drawn');
+                $('input[value='+bn+']').parent().removeClass('drawn');
             }
         });
 
