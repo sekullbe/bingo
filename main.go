@@ -21,6 +21,9 @@ var templateFS embed.FS
 //go:embed css
 var cssFS embed.FS
 
+//go:embed fonts
+var fontsFS embed.FS
+
 type Results struct {
 	AverageCallsUntilWin int
 	WinsForEachShape     map[int]int
@@ -37,6 +40,7 @@ func main() {
 
 	// CSS is also static, but separated out so it works regardless of other static files
 	http.Handle("/css/", http.FileServer(http.FS(cssFS)))
+	http.Handle("/fonts/", http.FileServer(http.FS(fontsFS)))
 	// everything else is the main template
 	http.HandleFunc("/", serveTemplate)
 	http.HandleFunc("/board", parseBoard)

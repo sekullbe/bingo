@@ -68,49 +68,51 @@
 </script>
 </head>
 <body>
-<div id="buttons">
+<div id="buttons" class="block">
     <h1>Set up your bingo board</h1>
 
     <P>For each square, enter the number.
     <form id="board" method="post">
-        <table>
-            <tr><th>B</th><th>I</th><th>N</th><th>G</th><th>O</th></tr>
+        <div class="board">
+            <div class="board-header"><div>B</div><div>I</div><div>N</div><div>G</div><div>O</div></div>
             {{range .Rows}}
-            <tr>
+            <div class="board-row">
                 {{ range . }}
-                  <td class="{{if eq .Number 0}}drawn{{end}}">{{template "square" .}}</td>
+                  <div class="square {{if eq .Number 0}}drawn free{{end}}">{{template "square" .}}</div>
                 {{ end }}
-            </tr>
+            </div>
             {{end}}
-        </table>
+        </div>
         <P>Numbers already called:</P>
         {{ $c := .Called}}
         {{range $i := N 1 15}}
-          <span>{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span class="calledBoxContainer">{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 16 30}}
-          <span>{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span class="calledBoxContainer">{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 31 45}}
-          <span>{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span class="calledBoxContainer">{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 46 60}}
-          <span>{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span class="calledBoxContainer">{{$i}}<input type="checkbox" class="calledBox" {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br>
         {{range $i := N 61 75}}
-          <span>{{$i}}<input type="checkbox"class="calledBox"  {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
+          <span class="calledBoxContainer">{{$i}}<input type="checkbox"class="calledBox"  {{if (index $c $i)}}checked{{end}} name="called" id="called_{{$i}}" value="called_{{$i}}"/></span>
         {{end}}
         <br/><br/>
-        <input type="button" id="sendit" name="sendit" value="Run Simulation"/>
+        <div class="send-container">
+            <input type="button" id="sendit" name="sendit" value="Run Simulation"/>
+        </div>
     </form>
 </div>
 <br>
-<div id="errors" style="display: none;"></div>
-<div id="results">
+<div id="errors" class="block" style="display: none;"></div>
+<div id="results" class="block">
 <p>Average calls before this board wins: <span id="avgCalls"></span></p>
     <p>Scenarios where shape 1 (arrow) wins: <span id="shape1"></span></p>
     <p>Scenarios where shape 2 (heart) wins: <span id="shape2"></span></p>
@@ -121,7 +123,7 @@
 {{end}}
 
 {{define "square"}}
-{{if eq .Number 0}}FREE{{else}}<input class="bingoNum" size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}"/>{{end}}
+{{if eq .Number 0}}FREE SPACE{{else}}<input class="bingoNum" size="2" maxlength="2" value="{{.Number}}" name="square_id_{{.Number}}"/>{{end}}
     <span class="needed">
       <br/>
       <input type="checkbox" {{if (index .Needed 0)}}checked{{end}} name="square_needed_{{.Number}}_0"/>
