@@ -50,18 +50,24 @@
         $(".calledBox").change(function(ev) {
             let tid = ev.target.id; // called_N
             let bn = tid.split("_")[1] //
-            console.log(bn)
             let box = $('input[value='+bn+']').parent();
             if (this.checked) {
                 box.addClass('drawn');
             } else {
                 box.removeClass('drawn');
             }
-
-
-
         });
 
+        $(".calledBox").each(function(i,e) {
+            let elid = e.id; // called_N
+            let bn = elid.split("_")[1] //
+            let box = $('input[value='+bn+']').parent();
+            if (this.checked) {
+                box.addClass('drawn');
+            } else {
+                box.removeClass('drawn');
+            }
+        });
 
     });
 </script>
@@ -116,7 +122,7 @@
 </div>
 
 </body>
-</htmllang>
+</html>
 {{end}}
 
 {{define "square"}}
